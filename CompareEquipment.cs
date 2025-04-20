@@ -33,8 +33,6 @@ namespace Erenshor_CompareEquipment
         private static float minValidX;
         private static Resolution curResolution;
 
-        //public static ManualLogSource Log;
-
         public static GameObject clonedItemInfo;
         public static ItemCompareWindow ItemCompareWindow;
         public static ItemIcon curItemLook;
@@ -58,8 +56,6 @@ namespace Erenshor_CompareEquipment
             harmony.PatchAll();
             uiInitialized = false;
 
-            //Log = Logger;
-
             // Initialize the variables that are used to clamp the windows to the bounds of the screen.
             float scaleX = Screen.width / 1920f;
             float scaleY = Screen.height / 1080f;
@@ -69,6 +65,8 @@ namespace Erenshor_CompareEquipment
             halfScaledWindowWidth = scaledWindowWidth / 2f;
             curResolution = Screen.currentResolution;
             minValidX = 5f;
+
+            Logger.LogMessage("CompareEquipment loaded successfully!");
 
             //More stuff for separating the new UI components into their own GameObject - Here just in case using existing UI causes issues
             //cwUI = new GameObject("CompareEquipment");
