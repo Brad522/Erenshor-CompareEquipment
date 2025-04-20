@@ -11,7 +11,7 @@ namespace Erenshor_CompareEquipment
         // Token: 0x060005FA RID: 1530 RVA: 0x00062F6F File Offset: 0x0006116F
         public void Awake()
         {
-            CompareEquipment.ItemCompareWindow = this;
+            //CompareEquipment.ItemCompareWindow = this;
         }
 
         // Token: 0x060005FB RID: 1531 RVA: 0x00062F78 File Offset: 0x00061178
@@ -101,8 +101,8 @@ namespace Erenshor_CompareEquipment
                     }
                     this.Lore.verticalAlignment = VerticalAlignmentOptions.Bottom;
                     this.ReqLvl.SetActive(false);
-                    CompareEquipment.ItemCompareWindow.StatTextParent.SetActive(true);
-                    CompareEquipment.ItemCompareWindow.OtherTextParent.SetActive(false);
+                    this.StatTextParent.SetActive(true);
+                    this.OtherTextParent.SetActive(false);
                     if (item.WeaponDmg == 0 && item.WeaponDly == 0f)
                     {
                         this.DMGtxt.gameObject.SetActive(false);
@@ -152,12 +152,12 @@ namespace Erenshor_CompareEquipment
                 }
                 else if (item.RequiredSlot == Item.SlotType.General)
                 {
-                    CompareEquipment.ItemCompareWindow.StatTextParent.SetActive(false);
+                    this.StatTextParent.SetActive(false);
                     this.OtherTextParent.GetComponent<TextMeshProUGUI>().text = "";
                 }
                 else
                 {
-                    CompareEquipment.ItemCompareWindow.OtherTextParent.SetActive(true);
+                    this.OtherTextParent.SetActive(true);
                     this.OtherTextParent.GetComponent<TextMeshProUGUI>().text = "";
                 }
                 if (item.ItemEffectOnClick != null)
@@ -168,7 +168,7 @@ namespace Erenshor_CompareEquipment
                     this.ItemEffect.SetActive(true);
                     this.ClickSpell.text = "Activatable: " + item.ItemEffectOnClick.SpellName;
                     this.ClickDesc.text = item.ItemEffectOnClick.SpellDesc;
-                    CompareEquipment.ItemCompareWindow.OtherTextParent.SetActive(true);
+                    this.OtherTextParent.SetActive(true);
                     if (item.Disposable)
                     {
                         TextMeshProUGUI component = this.OtherTextParent.GetComponent<TextMeshProUGUI>();
@@ -184,7 +184,7 @@ namespace Erenshor_CompareEquipment
                     this.ItemEffect.SetActive(true);
                     this.ClickSpell.text = "Worn Effect: " + item.WornEffect.SpellName;
                     this.ClickDesc.text = item.WornEffect.SpellDesc;
-                    CompareEquipment.ItemCompareWindow.OtherTextParent.SetActive(true);
+                    this.OtherTextParent.SetActive(true);
                     this.OtherTextParent.GetComponent<TextMeshProUGUI>().text = "Effect applied once item is equipped.";
                 }
                 else if (item.WeaponProcOnHit != null)
@@ -203,7 +203,7 @@ namespace Erenshor_CompareEquipment
                         this.ClickSpell.text = item.WeaponProcChance.ToString() + "% chance on CAST: \n" + item.WeaponProcOnHit.SpellName;
                     }
                     this.ClickDesc.text = item.WeaponProcOnHit.SpellDesc;
-                    CompareEquipment.ItemCompareWindow.OtherTextParent.SetActive(true);
+                    this.OtherTextParent.SetActive(true);
                     this.OtherTextParent.GetComponent<TextMeshProUGUI>().text = "";
                 }
                 else
@@ -219,7 +219,7 @@ namespace Erenshor_CompareEquipment
                     {
                         num2 = 1.5f;
                     }
-                    CompareEquipment.ItemCompareWindow.OtherTextParent.SetActive(true);
+                    this.OtherTextParent.SetActive(true);
                     this.OtherTextParent.GetComponent<TextMeshProUGUI>().faceColor = Color.green;
                     float num3 = ((float)(item.WeaponDmg + (_quantity - 1)) * (float)GameData.PlayerStats.Level * 0.8f * 0.9f + ((float)GameData.PlayerStats.dexBonus() / 40f + (float)GameData.PlayerStats.strBonus() / 40f) + 5f + 2f * (float)GameData.PlayerStats.Level) / item.WeaponDly;
                     num3 *= num2;
@@ -232,10 +232,10 @@ namespace Erenshor_CompareEquipment
                 if (item.TeachSpell != null)
                 {
                     this.Lore.verticalAlignment = VerticalAlignmentOptions.Bottom;
-                    CompareEquipment.ItemCompareWindow.StatTextParent.SetActive(false);
-                    CompareEquipment.ItemCompareWindow.OtherTextParent.SetActive(true);
+                    this.StatTextParent.SetActive(false);
+                    this.OtherTextParent.SetActive(true);
                     Spell teachSpell = item.TeachSpell;
-                    CompareEquipment.ItemCompareWindow.ReqLvl.SetActive(true);
+                    this.ReqLvl.SetActive(true);
                     this.ReqLvl.GetComponent<TextMeshProUGUI>().text = string.Concat(new string[]
                     {
                     "Required Level: ",
@@ -250,17 +250,17 @@ namespace Erenshor_CompareEquipment
                 }
                 else if (item.Aura != null)
                 {
-                    CompareEquipment.ItemCompareWindow.StatTextParent.SetActive(false);
-                    CompareEquipment.ItemCompareWindow.OtherTextParent.SetActive(true);
+                    this.StatTextParent.SetActive(false);
+                    this.OtherTextParent.SetActive(true);
                     this.Lore.verticalAlignment = VerticalAlignmentOptions.Middle;
                     this.Lore.text = "<color=#16EC00>Aura Item</color>\nAuras effect entire party\nAuras of same type do not stack\n\n<color=#16EC00>" + item.Aura.SpellName + "</color>\n" + item.Aura.SpellDesc;
                 }
                 if (item.TeachSkill != null)
                 {
                     this.Lore.verticalAlignment = VerticalAlignmentOptions.Bottom;
-                    CompareEquipment.ItemCompareWindow.StatTextParent.SetActive(false);
-                    CompareEquipment.ItemCompareWindow.OtherTextParent.SetActive(true);
-                    CompareEquipment.ItemCompareWindow.ReqLvl.SetActive(true);
+                    this.StatTextParent.SetActive(false);
+                    this.OtherTextParent.SetActive(true);
+                    this.ReqLvl.SetActive(true);
                     Skill teachSkill = item.TeachSkill;
                     string text = "Required Level: \n";
                     if (teachSkill.DuelistRequiredLevel != 0)

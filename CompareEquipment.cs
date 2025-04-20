@@ -3,6 +3,7 @@ using BepInEx.Logging;
 using HarmonyLib;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Runtime.Remoting.Messaging;
 using TMPro;
 using UnityEngine;
@@ -41,6 +42,14 @@ namespace Erenshor_CompareEquipment
         public static Vector3 compareWindowPos;
         private float modifiedItemInfoPosX;
 
+        private static readonly HashSet<Item.SlotType> ValidCompareSlots = new HashSet<Item.SlotType>
+        {
+            Item.SlotType.Primary,
+            Item.SlotType.Secondary,
+            Item.SlotType.Ring,
+            Item.SlotType.Bracer
+        };
+
         //For separating the new UI components into their own GameObject - Here just in case using existing UI causes issues
         //private static GameObject cwUI;
 
@@ -70,6 +79,39 @@ namespace Erenshor_CompareEquipment
             //cScaler.referenceResolution = new Vector2((float)1920, (float)1080);
             //cScaler.screenMatchMode = CanvasScaler.ScreenMatchMode.Expand;
             //cScaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+        }
+
+        private void OnDestroy()
+        {
+            // Unpatch all methods when the mod is disabled or unloaded.
+            harmony.UnpatchAll(ModGUID);
+
+            // Destroy GameObjects or Components creaed by the mod.
+            if (clonedItemInfo != null)
+                GameObject.Destroy(clonedItemInfo);
+            if (ItemCompareWindow != null)
+                GameObject.Destroy(ItemCompareWindow);
+            if (positionDummy != null)
+                GameObject.Destroy(positionDummy.gameObject);
+
+            // Set references to null
+            gameUI = null;
+            playerInv = null;
+            dragIcon = null;
+            canvasRect = null;
+            positionDummy = null;
+            clonedItemInfo = null;
+            ItemCompareWindow = null;
+            curItemLook = null;
+            curItemEquip = null;
+
+            // Reset the static variables to their default values.
+            compareWindowPos = default;
+            modifiedItemInfoPosX = 0f;
+            uiInitialized = false;
+            curResolution = default;
+            halfScaledWindowWidth = 0f;
+            minValidX = 0f;
         }
 
         // Ensures required UI elements are initialized and handles compare window updates.
@@ -126,7 +168,7 @@ namespace Erenshor_CompareEquipment
 
             // Create and initalize the ItemCompareWindow if needed.
             if (ItemCompareWindow == null && clonedItemInfo != null)
-                gameUI.AddComponent<ItemCompareWindow>();
+                ItemCompareWindow = gameUI.AddComponent<ItemCompareWindow>();
 
             if (ItemCompareWindow != null)
                 InitItemCompareWindow();
@@ -137,15 +179,7 @@ namespace Erenshor_CompareEquipment
 
             // Cache reference to the component used during item dragging
             if (dragIcon == null && playerInv != null)
-            {
-                Transform mouseSlot = playerInv.transform.Find("Mouse Slot");
-                if (mouseSlot != null)
-                {
-                    Transform itemIcon = mouseSlot.Find("ItemIcon (2)");
-                    if (itemIcon != null)
-                        dragIcon = itemIcon.GetComponent<ItemIcon>();
-                }
-            }
+                dragIcon = FindAndGet<ItemIcon>(playerInv.transform, "Mouse Slot/ItemIcon (2)");
 
             // Cache reference to the canvas RectTransform.
             if (canvasRect == null)
@@ -200,7 +234,7 @@ namespace Erenshor_CompareEquipment
 
                 // Only push the ItemInfoWindow if the previously modified position is different from the current position.
                 float curItemInfoWindowPosX = GameData.ItemInfoWindow.ParentWindow.transform.position.x;
-                if (!Mathf.Approximately(curItemInfoWindowPosX,modifiedItemInfoPosX))
+                if (!Mathf.Approximately(curItemInfoWindowPosX, modifiedItemInfoPosX))
                 {
                     modifiedItemInfoPosX = GameData.ItemInfoWindow.ParentWindow.transform.position.x + pushAmount;
                     GameData.ItemInfoWindow.ParentWindow.transform.position = new Vector2(modifiedItemInfoPosX, GameData.ItemInfoWindow.ParentWindow.transform.position.y);
@@ -241,16 +275,25 @@ namespace Erenshor_CompareEquipment
             if (curItemLook == null || curItemEquip == null || curItemLook == GameData.PlayerInv.Empty)
                 return;
 
-            // Only allow switching for items that can go in either Primary or Secondary slots.
-            if (curItemLook.MyItem.RequiredSlot != Item.SlotType.PrimaryOrSecondary)
+            // Only allow switching for items that can go in the Ring, Bracer slots and items that can go in both Primary and Secondary slots.
+            if (curItemLook.MyItem.RequiredSlot != Item.SlotType.PrimaryOrSecondary && 
+                curItemLook.MyItem.RequiredSlot != Item.SlotType.Ring &&
+                curItemLook.MyItem.RequiredSlot != Item.SlotType.Bracer)
                 return;
 
-            // Ensure the current item being compared is for a valid slot.
-            if (curItemEquip.ThisSlotType != Item.SlotType.Primary && curItemEquip.ThisSlotType != Item.SlotType.Secondary)
+            // Ensures the current item being compared is in a valid slot.
+            // Just an extra safety check in case things ever become out of sync.
+            if (curItemEquip.ThisSlotType != Item.SlotType.Primary &&
+                curItemEquip.ThisSlotType != Item.SlotType.Secondary &&
+                curItemEquip.ThisSlotType != Item.SlotType.Ring &&
+                curItemEquip.ThisSlotType != Item.SlotType.Bracer)
                 return;
 
             // Switch the equipped item variable to the item in the opposite slot.
-            curItemEquip = GetEquippedItem(GetAlternateSlotType(curItemEquip.ThisSlotType));
+            if (curItemEquip.ThisSlotType == Item.SlotType.Bracer || curItemEquip.ThisSlotType == Item.SlotType.Ring)
+                curItemEquip = GetEquippedItem(curItemEquip.ThisSlotType, true);
+            else
+                curItemEquip = GetEquippedItem(GetAlternateSlotType(curItemEquip.ThisSlotType), false);
 
             // Abort if the result is invalid or opposite slot is empty.
             if (curItemEquip == null || curItemEquip.MyItem == GameData.PlayerInv.Empty)
@@ -336,11 +379,14 @@ namespace Erenshor_CompareEquipment
         }
 
         // Gets the ItemIcon of the equipped item in the same equipment slot of the item we are currently looking at.
-        public static ItemIcon GetEquippedItem(Item.SlotType slotNeeded)
+        public static ItemIcon GetEquippedItem(Item.SlotType slotNeeded, bool switchRingWrist)
         {
             foreach (ItemIcon itemIcon in GameData.PlayerInv.EquipmentSlots)
             {
                 var slotType = itemIcon.ThisSlotType;
+
+                if (switchRingWrist && itemIcon == curItemEquip)
+                    continue;
 
                 if (slotType == slotNeeded)
                     return itemIcon;
@@ -424,7 +470,7 @@ namespace Erenshor_CompareEquipment
                 return;
 
             // Get the equipped item that matches the required slot of the hovered item.
-            CompareEquipment.curItemEquip = GetEquippedItem(CompareEquipment.curItemLook.MyItem.RequiredSlot);
+            CompareEquipment.curItemEquip = GetEquippedItem(CompareEquipment.curItemLook.MyItem.RequiredSlot, false);
 
             // Proceed only if a valid equipped item exists in that slot.
             if (CompareEquipment.curItemEquip != null && CompareEquipment.curItemEquip.MyItem != GameData.PlayerInv.Empty)
