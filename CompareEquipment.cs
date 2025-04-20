@@ -226,21 +226,27 @@ namespace Erenshor_CompareEquipment
             // Only proceed if the compare window is out of bounds.
             if (CheckOutOfBounds())
             {
+                // Cache transforms and positions
+                Transform compareTransform = ItemCompareWindow.ParentWindow.transform;
+                Transform itemInfoTransform = GameData.ItemInfoWindow.ParentWindow.transform;
+
+                Vector2 comparePos = compareTransform.position;
+                Vector2 itemInfoPos = itemInfoTransform.position;
+
                 // Calculate the minimum valid X position for the compare window and amount to push the windows by.
-                float leftMostX = ItemCompareWindow.ParentWindow.transform.position.x - halfScaledWindowWidth;
+                float leftMostX = comparePos.x - halfScaledWindowWidth;
                 float pushAmount = Mathf.Max(0, minValidX - leftMostX);
+                Vector2 pushVector = new Vector2(pushAmount, 0f);
+                Vector2 offset = new Vector2(200f, 100f);
 
-                // Only push the ItemInfoWindow if the previously modified position is different from the current position.
-                float curItemInfoWindowPosX = GameData.ItemInfoWindow.ParentWindow.transform.position.x;
-                if (!Mathf.Approximately(curItemInfoWindowPosX, modifiedItemInfoPosX))
-                {
-                    modifiedItemInfoPosX = GameData.ItemInfoWindow.ParentWindow.transform.position.x + pushAmount;
-                    GameData.ItemInfoWindow.ParentWindow.transform.position = new Vector2(modifiedItemInfoPosX, GameData.ItemInfoWindow.ParentWindow.transform.position.y);
-                    
-                }
+                // Push the item info window.
+                itemInfoTransform.position = itemInfoPos + pushVector;
 
-                // Push the CompareEquipment window to the right.
-                ItemCompareWindow.ParentWindow.transform.position = new Vector2(ItemCompareWindow.ParentWindow.transform.position.x + pushAmount, CompareEquipment.ItemCompareWindow.ParentWindow.transform.position.y);
+                // Push the compare window and update compareWindowPos for switch usage.
+                Vector2 newComparePos = comparePos + pushVector;
+                compareTransform.position = newComparePos;
+
+                compareWindowPos = newComparePos + offset;
             }
         }
 
@@ -299,16 +305,17 @@ namespace Erenshor_CompareEquipment
 
             // Update the compare window with the item from the opposite slot.
             ItemCompareWindow.CloseItemWindow();
+            Logger.LogMessage("compareWindowPos: " + compareWindowPos);
             ItemCompareWindow.DisplayItem(curItemEquip.MyItem, compareWindowPos, curItemEquip.Quantity);
         }
 
         // Checks if the compare window is out of bounds and needs to be clamped. 
         private static bool CheckOutOfBounds()
         {
-            if (CompareEquipment.ItemCompareWindow.ParentWindow.transform.position.x - CompareEquipment.halfScaledWindowWidth < CompareEquipment.minValidX)
-                return true;
-            else
-                return false;
+            const float epsilon = 0.01f; // Small tolerance to avoid floating point precision issues
+
+            return CompareEquipment.ItemCompareWindow.ParentWindow.transform.position.x -
+                CompareEquipment.halfScaledWindowWidth < CompareEquipment.minValidX - epsilon;
         }
 
         /// Initializes fields of the new ItemCompareWindow component to the appropriate GameObjects / Components of
