@@ -305,7 +305,6 @@ namespace Erenshor_CompareEquipment
 
             // Update the compare window with the item from the opposite slot.
             ItemCompareWindow.CloseItemWindow();
-            Logger.LogMessage("compareWindowPos: " + compareWindowPos);
             ItemCompareWindow.DisplayItem(curItemEquip.MyItem, compareWindowPos, curItemEquip.Quantity);
         }
 
