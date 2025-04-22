@@ -16,7 +16,7 @@ namespace Erenshor_CompareEquipment
     public class CompareEquipment : BaseUnityPlugin
     {
         internal const string ModName = "CompareEquipment";
-        internal const string ModVersion = "1.2.0";
+        internal const string ModVersion = "1.2.1";
         internal const string ModDescription = "Compare Equipment";
         internal const string Author = "Brad522";
         private const string ModGUID = Author + "." + ModName;
