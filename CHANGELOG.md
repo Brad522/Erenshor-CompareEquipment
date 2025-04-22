@@ -3,7 +3,14 @@
 - Implemented Item Info display on hover when looking at a Sim Player's equipment.
 - Implemented Equipment comparison with Sim Player's equipment if you are currently inspecting a Sim Player.
   
-### Changed
+### Fixed
 - Fixed item comparison switching for ring and wrist slots.
 - Fixed window flickering when switching an item and the window had been clamped to screen bounds.
 
+## [1.1.0] - 2025-04-18
+### Added
+- UI windows (Item Info and Compare) now dynamically adapt their position based on screen resolution and aspect ratio.
+- Edge clamping added to prevent windows from rendering off-screen on any resolution.
+
+### Fixed
+- Previously, the windows only positioned correctly at 2560 x 1440 resolution. This update ensures consistent display across all screen sizes.
