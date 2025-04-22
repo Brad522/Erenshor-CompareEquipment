@@ -1,4 +1,5 @@
 ﻿using BepInEx;
+using BepInEx.Configuration;
 using HarmonyLib;
 using System.Collections;
 using System.Collections.Generic;
@@ -39,6 +40,8 @@ namespace Erenshor_CompareEquipment
         public static List<ItemSlotData> equipSlots;
         public static Vector3 compareWindowPos;
 
+        private ConfigEntry<KeyboardShortcut> switchKey;
+
         //For separating the new UI components into their own GameObject - Here just in case using existing UI causes issues
         //private static GameObject cwUI;
 
@@ -56,6 +59,12 @@ namespace Erenshor_CompareEquipment
             halfScaledWindowWidth = scaledWindowWidth / 2f;
             curResolution = Screen.currentResolution;
             minValidX = 5f;
+
+            switchKey = Config.Bind(
+                "General",
+                "Hotkey",
+                new KeyboardShortcut(KeyCode.F),
+                "Hotkey used to switch the slot you are comparing with.");
 
             Logger.LogMessage("CompareEquipment loaded successfully!");
 
@@ -287,7 +296,7 @@ namespace Erenshor_CompareEquipment
         private void HandleCompareWindowSwitch()
         {
             // Ensure UI is ready, compare window is active, and key was pressed.
-            if (!uiInitialized || !ItemCompareWindow.isWindowActive() || !Input.GetKeyDown(KeyCode.F))
+            if (!uiInitialized || !ItemCompareWindow.isWindowActive() || !switchKey.Value.IsDown())
                 return;
 
             // Check required variables and make sure we're not looking at an empty slot.
