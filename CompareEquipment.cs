@@ -1,11 +1,8 @@
 ﻿using BepInEx;
-using BepInEx.Logging;
 using HarmonyLib;
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.Remoting.Messaging;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
