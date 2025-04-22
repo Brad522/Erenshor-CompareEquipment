@@ -1,3 +1,7 @@
+## [1.2.1] - 2025-04-22 
+### Fixed
+- Fixed an issue where the item value shown in the compare window would not update.
+
 ## [1.2.0] - 2025-04-20
 ### Added
 - Implemented Item Info display on hover when looking at a Sim Player's equipment.
