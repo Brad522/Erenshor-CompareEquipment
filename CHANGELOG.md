@@ -1,4 +1,7 @@
 ## [1.2.1] - 2025-04-22 
+### Added
+- Added a config option to allow users to change the hotkey used to switch the item slot they are comparing with.
+
 ### Fixed
 - Fixed an issue where the item value shown in the compare window would not update.
 

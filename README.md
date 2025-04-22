@@ -21,7 +21,7 @@ BepInEx 5 is required for this mod to work.
 
 - Hover over an item that is equippable and it's details will automatically be shown.
 - If you have an item equipped in the same slot as that item requires the comparison window will show on the left side.
-- If the item you are looking at is an item that can be equipped in either the Primary or Secondary slot and you have an item equipped in both slots you can press 'F' to switch what slot is being displayed in the comparison window.
+- If the item you are looking at is an item that can be equipped in either the Primary or Secondary slot and you have an item equipped in both slots you can press 'F' to switch what slot is being displayed in the comparison window. (This hotkey can be changed in the config file created after the first launch located in 'BepInEx/config')
 
 ## Screenshots
 
