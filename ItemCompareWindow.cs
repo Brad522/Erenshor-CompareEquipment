@@ -26,6 +26,14 @@ namespace Erenshor_CompareEquipment
                 }
                 this.ParentWindow.SetActive(true);
                 this.Usable.text = "";
+                if (item.ItemValue > 0)
+                {
+                    this.itemPrice.text = item.ItemValue.ToString();
+                }
+                else
+                {
+                    this.itemPrice.text = "Unsellable";
+                }
                 if (item.Classes.Count > 0)
                 {
                     if (item.Classes.Contains(GameData.ClassDB.Arcanist))
@@ -317,6 +325,8 @@ namespace Erenshor_CompareEquipment
 
         // Token: 0x04000A96 RID: 2710
         public TextMeshProUGUI ItemName;
+
+        public TextMeshProUGUI itemPrice;
 
         // Token: 0x04000A97 RID: 2711
         public TextMeshProUGUI Str;

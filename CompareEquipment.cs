@@ -352,6 +352,7 @@ namespace Erenshor_CompareEquipment
             ItemCompareWindow.ItemName = FindAndGet<TextMeshProUGUI>(transform, "Title");
             ItemCompareWindow.Lore = FindAndGet<TextMeshProUGUI>(transform, "Lore");
             ItemCompareWindow.Usable = FindAndGet<TextMeshProUGUI>(transform, "UsableBy");
+            ItemCompareWindow.itemPrice = FindAndGet<TextMeshProUGUI>(transform, "Text (TMP) (6)");
 
             var effectTransform = ItemCompareWindow.ItemEffect.transform.Find("Image (1)");
             ItemCompareWindow.ClickDesc = FindAndGet<TextMeshProUGUI>(effectTransform, "SpellDesc");
