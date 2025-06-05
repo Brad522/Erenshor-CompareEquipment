@@ -78,8 +78,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CoroutineRunner.cs" />
-    <Compile Include="ItemCompareWindow.cs" />
     <Compile Include="CompareEquipment.cs" />
+    <Compile Include="ItemCompareWindow.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

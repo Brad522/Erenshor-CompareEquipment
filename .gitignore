@@ -366,3 +366,4 @@ FodyWeavers.xsd
 Thunderstore/
 Scripts/
 PostBuild.bat
+ItemCompareWindowOld.cs

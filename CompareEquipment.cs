@@ -4,6 +4,8 @@ using HarmonyLib;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
+using System.Reflection.Emit;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -84,7 +86,7 @@ namespace Erenshor_CompareEquipment
             // Unpatch all methods when the mod is disabled or unloaded.
             harmony.UnpatchAll(ModGUID);
 
-            // Destroy GameObjects or Components creaed by the mod.
+            // Destroy GameObjects or Components created by the mod.
             if (clonedItemInfo != null)
                 GameObject.Destroy(clonedItemInfo);
             if (ItemCompareWindow != null)
@@ -106,6 +108,7 @@ namespace Erenshor_CompareEquipment
             curItemLook = null;
             curItemEquip = null;
             equipSlots = null;
+            switchKey = null;
 
             // Reset the static variables to their default values.
             compareWindowPos = default;
@@ -170,7 +173,8 @@ namespace Erenshor_CompareEquipment
 
             // Create and initalize the ItemCompareWindow if needed.
             if (ItemCompareWindow == null && clonedItemInfo != null)
-                ItemCompareWindow = gameUI.AddComponent<ItemCompareWindow>();
+                //ItemCompareWindow = gameUI.AddComponent<ItemCompareWindow>();
+                gameUI.AddComponent<ItemCompareWindow>();
 
             if (ItemCompareWindow != null)
                 InitItemCompareWindow();
@@ -329,7 +333,7 @@ namespace Erenshor_CompareEquipment
 
             // Update the compare window with the item from the opposite slot.
             ItemCompareWindow.CloseItemWindow();
-            ItemCompareWindow.DisplayItem(curItemEquip.MyItem, compareWindowPos, curItemEquip.Quantity);
+            ItemCompareWindow.DisplayItem(curItemEquip.MyItem, compareWindowPos, curItemEquip.Quant);
         }
 
         // Checks if the compare window is out of bounds and needs to be clamped. 
@@ -493,7 +497,7 @@ namespace Erenshor_CompareEquipment
             if (windowPosition == Vector2.zero)
                 return;
 
-            GameData.ItemInfoWindow.DisplayItem(CompareEquipment.curItemLook.MyItem, windowPosition, CompareEquipment.curItemLook.Quantity);
+            GameData.ItemInfoWindow.DisplayItem(CompareEquipment.curItemLook.MyItem, windowPosition, CompareEquipment.curItemLook.Quant);
         }
 
         private static void DisplayCompareWindow(Vector2 offset, float mouseY)
@@ -533,9 +537,9 @@ namespace Erenshor_CompareEquipment
                 // If the compare window is initialized, display the item. If not the coroutine will wait a frame at a time
                 // until the window is initialized.
                 if (CompareEquipment.ItemCompareWindow != null)
-                    CompareEquipment.ItemCompareWindow.DisplayItem(CompareEquipment.curItemEquip.MyItem, CompareEquipment.compareWindowPos, CompareEquipment.curItemEquip.Quantity);
+                    CompareEquipment.ItemCompareWindow.DisplayItem(CompareEquipment.curItemEquip.MyItem, CompareEquipment.compareWindowPos, CompareEquipment.curItemEquip.Quant);
                 else
-                    CoroutineRunner.Run(WaitForCompareWindow(CompareEquipment.curItemEquip.MyItem, CompareEquipment.compareWindowPos, CompareEquipment.curItemEquip.Quantity));
+                    CoroutineRunner.Run(WaitForCompareWindow(CompareEquipment.curItemEquip.MyItem, CompareEquipment.compareWindowPos, CompareEquipment.curItemEquip.Quant));
             }
         }
 
@@ -657,13 +661,38 @@ namespace Erenshor_CompareEquipment
             }
         }
 
+        [HarmonyPatch(typeof(ItemInfoWindow))]
+        [HarmonyPatch("DisplayItem")]
+        class ItemInfoWindowDisplayItemPatch
+        {
+            static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+            {
+                var codes = new List<CodeInstruction>(instructions);
+                for (var i = 0; i < codes.Count; i++)
+                {
+                    if (codes[i].opcode == OpCodes.Ldsfld &&
+                        codes[i].operand is FieldInfo field &&
+                        field.Name == "ItemInfoWindow" &&
+                        field.DeclaringType == typeof(GameData))
+                    {
+                        codes[i] = new CodeInstruction(OpCodes.Ldarg_0)
+                        {
+                            labels = codes[i].labels
+                        };
+                    }
+                }
+
+                return codes.AsEnumerable();
+            }
+        }
+
         // Wrapper class for item slot data. Allows for uniform access to item data regardless of the source type.
         public class ItemSlotData
         {
             public object Source { get; }
             public Item MyItem { get; }
             public Item.SlotType ThisSlotType { get; }
-            public int Quantity { get; }
+            public int Quant { get; }
             public Transform transform => 
                 (Source as ItemIcon)?.transform ??
                 (Source as SimItemDisplay)?.transform;
@@ -675,7 +704,7 @@ namespace Erenshor_CompareEquipment
                 Source = icon;
                 MyItem = icon.MyItem;
                 ThisSlotType = icon.ThisSlotType;
-                Quantity = icon.Quantity;
+                Quant = icon.Quantity;
             }
 
             public ItemSlotData(SimInvSlot slot)
@@ -683,7 +712,7 @@ namespace Erenshor_CompareEquipment
                 Source = slot;
                 MyItem = slot.MyItem;
                 ThisSlotType = slot.ThisSlotType;
-                Quantity = slot.Quant;
+                Quant = slot.Quant;
             }
 
             public ItemSlotData(SimItemDisplay slot)
@@ -691,7 +720,7 @@ namespace Erenshor_CompareEquipment
                 Source = slot;
                 MyItem = slot.MyItem;
                 ThisSlotType = slot.Slot;
-                Quantity = 1;
+                Quant = slot.ItemLvl;
             }
         }
     }

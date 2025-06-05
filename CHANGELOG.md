@@ -1,3 +1,7 @@
+## [1.2.2] - 2025-05-05 
+### Fixed
+- Fixed an issue where the SimPlayer item display when comparing did not show the correct item quality.
+
 ## [1.2.1] - 2025-04-22 
 ### Added
 - Added a config option to allow users to change the hotkey used to switch the item slot they are comparing with.
