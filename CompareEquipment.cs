@@ -16,7 +16,7 @@ namespace Erenshor_CompareEquipment
     public class CompareEquipment : BaseUnityPlugin
     {
         internal const string ModName = "CompareEquipment";
-        internal const string ModVersion = "1.2.1";
+        internal const string ModVersion = "1.2.2";
         internal const string ModDescription = "Compare Equipment";
         internal const string Author = "Brad522";
         private const string ModGUID = Author + "." + ModName;
@@ -293,8 +293,6 @@ namespace Erenshor_CompareEquipment
             if (shouldCloseInfo && GameData.ItemInfoWindow.isWindowActive())
                 GameData.ItemInfoWindow.CloseItemWindow();
         }
-
-
 
         // Handles switching of the compare window between the Primary and Secondary slots.
         private void HandleCompareWindowSwitch()
