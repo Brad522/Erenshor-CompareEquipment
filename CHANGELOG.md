@@ -1,4 +1,8 @@
-## [1.2.2] - 2025-05-05 
+## [1.2.3] - 2025-06-12
+### Fixed
+- Fixed an issue caused by the newest game update that caused stats to not display in the compare window.
+
+## [1.2.2] - 2025-06-05 
 ### Fixed
 - Fixed an issue where the SimPlayer item display when comparing did not show the correct item quality.
 

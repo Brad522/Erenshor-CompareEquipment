@@ -16,7 +16,7 @@ namespace Erenshor_CompareEquipment
     public class CompareEquipment : BaseUnityPlugin
     {
         internal const string ModName = "CompareEquipment";
-        internal const string ModVersion = "1.2.2";
+        internal const string ModVersion = "1.2.3";
         internal const string ModDescription = "Compare Equipment";
         internal const string Author = "Brad522";
         private const string ModGUID = Author + "." + ModName;
@@ -387,6 +387,8 @@ namespace Erenshor_CompareEquipment
             ItemCompareWindow.Str = FindAndGet<TextMeshProUGUI>(stat, "StrStat");
             ItemCompareWindow.VR = FindAndGet<TextMeshProUGUI>(stat, "VRStat");
             ItemCompareWindow.Wis = FindAndGet<TextMeshProUGUI>(stat, "WisStat");
+            ItemCompareWindow.RangeNum = FindAndGet<TextMeshProUGUI>(stat, "RangeStat");
+            ItemCompareWindow.RangeText = FindAndGet<TextMeshProUGUI>(stat, "Range");
 
             ItemCompareWindow.GodlyText = new Color(0.9894f, 0.533f, 1f, 1f);
             ItemCompareWindow.Legendary = new Color(1f, 0f, 0.7107f, 1f);
