@@ -1,3 +1,9 @@
+## [1.2.4] - 2025-06-25
+### Added
+- Added support for showing the spell details on items in the compare window.
+### Fixed
+- Fixed an issue with the compare window caused by the recent game update.
+
 ## [1.2.3] - 2025-06-12
 ### Fixed
 - Fixed an issue caused by the newest game update that caused stats to not display in the compare window.

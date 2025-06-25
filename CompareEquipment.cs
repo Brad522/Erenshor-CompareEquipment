@@ -1,11 +1,13 @@
 ﻿using BepInEx;
 using BepInEx.Configuration;
+using BepInEx.Logging;
 using HarmonyLib;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Runtime.CompilerServices;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -16,7 +18,7 @@ namespace Erenshor_CompareEquipment
     public class CompareEquipment : BaseUnityPlugin
     {
         internal const string ModName = "CompareEquipment";
-        internal const string ModVersion = "1.2.3";
+        internal const string ModVersion = "1.2.4";
         internal const string ModDescription = "Compare Equipment";
         internal const string Author = "Brad522";
         private const string ModGUID = Author + "." + ModName;
@@ -51,6 +53,8 @@ namespace Erenshor_CompareEquipment
         {
             harmony.PatchAll();
             uiInitialized = false;
+
+            TryInitializeUIReferences();
 
             // Initialize the variables that are used to clamp the windows to the bounds of the screen.
             float scaleX = Screen.width / 1920f;
@@ -121,13 +125,16 @@ namespace Erenshor_CompareEquipment
         // Ensures required UI elements are initialized and handles compare window updates.
         private void Update()
         {
-            // If UI was initialized but references are now invalid (e.g., after returning to main menu).
+            //// If UI was initialized but references are now invalid (e.g., after returning to main menu).
             if (uiInitialized && !CheckUIElementsInit())
                 uiInitialized = false;
 
-            // Attempt to initialize UI if it hasn't been done yet.
+            //Attempt to initialize UI if it hasn't been done yet.
             if (!uiInitialized)
                 TryInitializeUIReferences();
+
+            if (!uiInitialized)
+                return; // Abort if UI is not initialized.
 
             // Handles clamping the windows to the bounds of the screen.
             ClampWindows();
@@ -355,6 +362,7 @@ namespace Erenshor_CompareEquipment
             ItemCompareWindow.StatTextParent = FindChild(transform, "EquipmentInfo");
             ItemCompareWindow.ItemEffect = FindChild(transform, "OnClick");
             ItemCompareWindow.ReqLvl = FindChild(transform, "ReqLvl");
+            ItemCompareWindow.SpellDetailsWindow = FindChild(transform, "Spell Details");
             ItemCompareWindow.Banner = FindAndGet<Image>(transform, "BG");
             ItemCompareWindow.ItemIcon = FindAndGet<Image>(transform, "Icon");
             ItemCompareWindow.ItemName = FindAndGet<TextMeshProUGUI>(transform, "Title");
@@ -389,6 +397,11 @@ namespace Erenshor_CompareEquipment
             ItemCompareWindow.Wis = FindAndGet<TextMeshProUGUI>(stat, "WisStat");
             ItemCompareWindow.RangeNum = FindAndGet<TextMeshProUGUI>(stat, "RangeStat");
             ItemCompareWindow.RangeText = FindAndGet<TextMeshProUGUI>(stat, "Range");
+
+            var spellDetails = ItemCompareWindow.SpellDetailsWindow.transform.Find("Image (1)");
+            ItemCompareWindow.SpellDetailsDesc = FindAndGet<TextMeshProUGUI>(spellDetails, "SpellDesc");
+            ItemCompareWindow.SpellDetailsImage = FindAndGet<Image>(spellDetails, "Image");
+            ItemCompareWindow.SpellDetailsName = FindAndGet<TextMeshProUGUI>(spellDetails, "SpellName");
 
             ItemCompareWindow.GodlyText = new Color(0.9894f, 0.533f, 1f, 1f);
             ItemCompareWindow.Legendary = new Color(1f, 0f, 0.7107f, 1f);
@@ -664,6 +677,31 @@ namespace Erenshor_CompareEquipment
         [HarmonyPatch(typeof(ItemInfoWindow))]
         [HarmonyPatch("DisplayItem")]
         class ItemInfoWindowDisplayItemPatch
+        {
+            static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+            {
+                var codes = new List<CodeInstruction>(instructions);
+                for (var i = 0; i < codes.Count; i++)
+                {
+                    if (codes[i].opcode == OpCodes.Ldsfld &&
+                        codes[i].operand is FieldInfo field &&
+                        field.Name == "ItemInfoWindow" &&
+                        field.DeclaringType == typeof(GameData))
+                    {
+                        codes[i] = new CodeInstruction(OpCodes.Ldarg_0)
+                        {
+                            labels = codes[i].labels
+                        };
+                    }
+                }
+
+                return codes.AsEnumerable();
+            }
+        }
+
+        [HarmonyPatch(typeof(ItemInfoWindow))]
+        [HarmonyPatch("LoadSpellDetails")]
+        class ItemInfoWindowLoadSpellDetailsPatch
         {
             static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
             {
