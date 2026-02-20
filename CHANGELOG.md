@@ -1,3 +1,7 @@
+## [1.2.5] - 2026-02-20
+### Fixed
+- Fixed display location of the compare window and added dynamic scaling for future-proofing. (Thanks to ItsJustDave2020/That1MiningGuy for providing this fix and dynamic scaling)
+
 ## [1.2.4] - 2025-06-25
 ### Added
 - Added support for showing the spell details on items in the compare window.
