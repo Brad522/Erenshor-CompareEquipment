@@ -88,7 +88,7 @@ namespace Erenshor_CompareEquipment
         private void OnDestroy()
         {
             // Unpatch all methods when the mod is disabled or unloaded.
-            harmony.UnpatchAll(ModGUID);
+            harmony.UnpatchSelf();
 
             // Destroy GameObjects or Components created by the mod.
             if (clonedItemInfo != null)
