@@ -34,6 +34,7 @@ namespace Erenshor_CompareEquipment
         private bool uiInitialized;
 
         private static float halfScaledWindowWidth;
+        private static float scaledWindowWidth;
         private static float minValidX;
         private static Resolution curResolution;
 
@@ -57,12 +58,7 @@ namespace Erenshor_CompareEquipment
             TryInitializeUIReferences();
 
             // Initialize the variables that are used to clamp the windows to the bounds of the screen.
-            float scaleX = Screen.width / 1920f;
-            float scaleY = Screen.height / 1080f;
-            float scaleFactor = Mathf.Min(scaleX, scaleY);
-            float windowWidth = 350f;
-            float scaledWindowWidth = windowWidth * scaleFactor;
-            halfScaledWindowWidth = scaledWindowWidth / 2f;
+            // Note: These will be recalculated in ClampWindows() once canvasRect is available.
             curResolution = Screen.currentResolution;
             minValidX = 5f;
 
@@ -119,6 +115,7 @@ namespace Erenshor_CompareEquipment
             uiInitialized = false;
             curResolution = default;
             halfScaledWindowWidth = 0f;
+            scaledWindowWidth = 0f;
             minValidX = 0f;
         }
 
@@ -223,24 +220,65 @@ namespace Erenshor_CompareEquipment
             uiInitialized = CheckUIElementsInit();
         }
 
+        // Updates the scaled window width values if resolution changed or not yet calculated.
+        public static void UpdateScaledWindowWidth()
+        {
+            if (canvasRect == null)
+                return;
+
+            // Check if the resolution was changed and update the scaledWindowWidth accordingly.
+            if (curResolution.width != Screen.currentResolution.width || curResolution.height != Screen.currentResolution.height || scaledWindowWidth == 0f)
+            {
+                curResolution = Screen.currentResolution;
+
+                // Get the reference resolution from the CanvasScaler for dynamic scaling
+                CanvasScaler scaler = canvasRect.GetComponent<CanvasScaler>();
+                Vector2 referenceResolution = scaler != null ? scaler.referenceResolution : new Vector2(1920f, 1080f);
+
+                float scaleX = Screen.width / referenceResolution.x;
+                float scaleY = Screen.height / referenceResolution.y;
+                float scaleFactor = Mathf.Min(scaleX, scaleY);
+                float windowWidth = 350f;
+                scaledWindowWidth = windowWidth * scaleFactor;
+                halfScaledWindowWidth = scaledWindowWidth / 2f;
+            }
+        }
+
+        // Returns the scaled window width, with a fallback if not yet calculated.
+        public static float GetScaledWindowWidth()
+        {
+            // Return a default value based on window width if not yet calculated
+            return scaledWindowWidth > 0f ? scaledWindowWidth : 350f;
+        }
+
+        // Positions the compare window to the left of the item info window.
+        private void PositionCompareWindowRelativeToItemInfo()
+        {
+            if (GameData.ItemInfoWindow == null || !GameData.ItemInfoWindow.isWindowActive())
+                return;
+
+            Transform itemInfoTransform = GameData.ItemInfoWindow.ParentWindow.transform;
+            Transform compareTransform = ItemCompareWindow.ParentWindow.transform;
+
+            // Get the current position of the item info window.
+            Vector3 itemInfoPos = itemInfoTransform.position;
+
+            // Offset the compare window to the left by the scaled window width plus a gap.
+            float offsetX = scaledWindowWidth + 10f;
+            compareTransform.position = new Vector3(itemInfoPos.x - offsetX, itemInfoPos.y, itemInfoPos.z);
+        }
+
         // Clamps the compare window to the bounds of the screen.
         private void ClampWindows()
         {
-            // Only proceed if the UI is initialized, the compare window is active and the compare window is out of bounds.
+            // Only proceed if the UI is initialized and the compare window is active.
             if (!uiInitialized || !ItemCompareWindow.isWindowActive())
                 return;
 
-            // Check if the resolution was changed and update the halfScaledWindowWidth accordingly.
-            if (curResolution.width != Screen.currentResolution.width || curResolution.height != Screen.currentResolution.height)
-            {
-                curResolution = Screen.currentResolution;
-                float scaleX = Screen.width / 1920f;
-                float scaleY = Screen.height / 1080f;
-                float scaleFactor = Mathf.Min(scaleX, scaleY);
-                float windowWidth = 350f;
-                float scaledWindowWidth = windowWidth * scaleFactor;
-                halfScaledWindowWidth = scaledWindowWidth / 2f;
-            }
+            UpdateScaledWindowWidth();
+
+            // Position the compare window to the left of the item info window.
+            PositionCompareWindowRelativeToItemInfo();
 
             // Only proceed if the compare window is out of bounds.
             if (CheckOutOfBounds())
@@ -483,18 +521,24 @@ namespace Erenshor_CompareEquipment
                 // Set the item we are looking at to the one we are hovering over.
                 CompareEquipment.curItemLook = new ItemSlotData(__instance);
 
+                // Ensure scaled window width is calculated before positioning.
+                CompareEquipment.UpdateScaledWindowWidth();
+
                 // Set offset values for the item info window and compare window.
                 float mouseY = Input.mousePosition.y;
                 int yOffset = mouseY > (float)(Screen.height / 2) ? -225 : 225;
                 int xOffset = -250;
-                int compareXOffset = xOffset - 347;
+                // Window width in reference resolution units (not scaled pixels).
+                // Add extra gap (10 units) to prevent overlap.
+                float windowWidthInRefUnits = 350f;
+                float compareXOffset = xOffset - windowWidthInRefUnits - 10f;
 
                 CompareEquipment.DisplayItemInfoWindow(new Vector2((float)xOffset, (float)yOffset), mouseY);
 
                 if (!GameData.InspectSim.InspectWindow.activeSelf)
-                    CompareEquipment.DisplayCompareWindow(new Vector2((float)compareXOffset, (float)yOffset), mouseY);
+                    CompareEquipment.DisplayCompareWindow(new Vector2(compareXOffset, (float)yOffset), mouseY);
                 else
-                    CompareEquipment.DisplayCompareWindow(new Vector2((float)compareXOffset, (float)yOffset), mouseY, true);
+                    CompareEquipment.DisplayCompareWindow(new Vector2(compareXOffset, (float)yOffset), mouseY, true);
 
                 // Only included here incase there are any equipment items that have quests attached. Otherwise not needed.
                 CompareEquipment.HandleItemQuests();
@@ -647,11 +691,10 @@ namespace Erenshor_CompareEquipment
 
                 GameData.PlayerAud.PlayOneShot(GameData.Misc.Click, 0.05f * GameData.SFXVol);
 
-                // Set offset values for the item info window and compare window.
+                // Set offset values for the item info window.
                 float mouseY = Input.mousePosition.y;
                 int yOffset = mouseY > (float)(Screen.height / 2) ? -225 : 225;
                 int xOffset = -250;
-                int compareXOffset = xOffset - 347;
 
                 // Set the item we are looking at to the one we are hovering over.
                 CompareEquipment.curItemLook = new ItemSlotData(__instance);
